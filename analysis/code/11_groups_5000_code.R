@@ -10,6 +10,7 @@
 library(rstan)
 library(coda)
 library(ggmcmc)
+library(parallel)
 
 # setting for rstan
 # automatically save a compiled Stan program so not need to be recompiled 
@@ -104,15 +105,40 @@ votes_dat <- list(
  x = matrix(group, nrow = nrow(votes))   # group indicators
 )
 
+#*****************************************************************************************
+# Fitting the model
+#*****************************************************************************************
 # call the stan function to draw posterior samples
-fit6 <- stan(
+#fit6 <- stan(
+# model_code = votes_code,                # Stan model
+# data = votes_dat,                       # named list of data
+# iter = 5000,                            # total number of iterations per chain
+# warmup = 1000,                          # number of warmup iterations per chain
+# chains = 1,                             # number of Markov chains
+# verbose = TRUE                          # print intemediate output from stan
+#)
+
+# initial fitting
+f1 <- stan(
  model_code = votes_code,                # Stan model
  data = votes_dat,                       # named list of data
- iter = 5000,                            # total number of iterations per chain
- warmup = 1000,                          # number of warmup iterations per chain
+ iter = 1,                               # total number of iterations per chain
  chains = 1,                             # number of Markov chains
- verbose = TRUE                          # print intemediate output from stan
 )
+
+# parallel computing, code comes from https://github.com/stan-dev/rstan/issues/99
+CL = makeCluster(5)                           # set number of clusters to number of desired chains
+clusterExport(cl=CL, list("votes_dat", "f1")) # make data available to rstan in diff cores
+clusterSetRNGStream(cl = CL, iseed = 123)
+sflist1 <- clusterEvalQ(CL, {
+  require(rstan)
+  sm <- stan(fit = f1, data = votes_dat,
+           chains = 1, iter=2000)
+  return(sm)
+ }
+)
+fit6 <- sflist2stanfit(sflist1)  # group output from each core into one list
+stopCluster(CL)
 
 #*****************************************************************************************
 # GRAPHING & EXPORTING
