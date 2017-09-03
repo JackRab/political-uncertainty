@@ -42,7 +42,7 @@ data {
   int<lower=1> G;              // number of groups
   int<lower=1,upper=J> jj[N];  // legislator for observation n
   int<lower=1,upper=K> kk[N];  // vote for observation n
-  matrix[N,G] x;			   // group indicators
+  matrix[N,G] x;	       // group indicators
   int<lower=0,upper=1> y[N];   // position for observation n
 //  vector[N] y;               // position for observation n
 }
@@ -61,11 +61,23 @@ transformed parameters {
 //  real total[N]; 
   vector[N] total; 
 
-  { 
-    matrix[N,G] summands; 
+// generate matrix for element-wise multiplication
+matrix[N,G] alpha_e;
+matrix[N,G] beta_e;
+matrix[N,G] gamma_e;
+{
     for (g in 1:G) 
       for (n in 1:N) 
-        summands[n,g]<- (x[n,g]*gamma[kk[n],g])*(alpha[jj[n],g] - beta[kk[n],g]); 
+      {
+        alpha_e[n,g] <- alpha[jj[n],g];
+        beta_e[n,g]  <- beta[kk[n],g];
+        gamma_e[n,g] <- gamma[kk[n],g];
+      }
+}
+
+  { 
+    matrix[N,G] summands; 
+    summands = x .* gamma_e .* (alpha_e - beta_e);
 
     for (n in 1:N) 
  //     for (g in 1:G) 
@@ -105,7 +117,7 @@ fit6 <- stan(
     data = votes_dat,                       # named list of data
     iter = 2000,                            # total number of iterations per chain
     warmup = 1000,                          # number of warmup iterations per chain
-    chains = 4,                             # number of Markov chains
+    chains = 2,                             # number of Markov chains
     seed = 1234,                            # set seed for replication
     verbose = TRUE                          # print intemediate output from stan
 )
