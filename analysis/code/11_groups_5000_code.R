@@ -44,7 +44,6 @@ data {
   int<lower=1,upper=K> kk[N];  // vote for observation n
   matrix[N,G] x;	       // group indicators
   int<lower=0,upper=1> y[N];   // position for observation n
-//  vector[N] y;               // position for observation n
 }
 
 parameters {    
@@ -58,7 +57,6 @@ parameters {
 }
 
 transformed parameters { 
-//  real total[N]; 
   vector[N] total; 
 
 // generate matrix for element-wise multiplication
@@ -80,7 +78,6 @@ matrix[N,G] gamma_e;
     summands = x .* gamma_e .* (alpha_e - beta_e);
 
     for (n in 1:N) 
- //     for (g in 1:G) 
         total[n] <- sum(summands[n]); 
   } 
 } 
