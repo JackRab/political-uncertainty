@@ -59,22 +59,20 @@ parameters {
 transformed parameters { 
   vector[N] total; 
 
-// generate matrix for element-wise multiplication
-matrix[N,G] alpha_e;
-matrix[N,G] beta_e;
-matrix[N,G] gamma_e;
-{
-    for (g in 1:G) 
-      for (n in 1:N) 
-      {
+  {
+    // generate matrix for element-wise multiplication
+    matrix[N,G] alpha_e;
+    matrix[N,G] beta_e;
+    matrix[N,G] gamma_e;
+    matrix[N,G] summands; 
+    for (g in 1:G) {
+      for (n in 1:N) {
         alpha_e[n,g] <- alpha[jj[n],g];
         beta_e[n,g]  <- beta[kk[n],g];
         gamma_e[n,g] <- gamma[kk[n],g];
       }
-}
+    } 
 
-  { 
-    matrix[N,G] summands; 
     summands = x .* gamma_e .* (alpha_e - beta_e);
 
     for (n in 1:N) 
